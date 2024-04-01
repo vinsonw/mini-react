@@ -1,5 +1,6 @@
 
 function createElement(type, props, ...children) {
+  console.log('createElement: hello')
   return {
     type,
     props: {
