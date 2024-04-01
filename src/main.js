@@ -1,5 +1,5 @@
 
-import ReactDOM from '../../core/ReactDOM.js'
+import ReactDOM from '../core/ReactDOM.js'
 import App from './App.jsx'
 
 
