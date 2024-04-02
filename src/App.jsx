@@ -1,7 +1,6 @@
 import React from '../core/React.js'
 
-// const App = React.createElement('div', {id: 'app'}, 'app', 'mini-react')
-const App = () => <div id='app'>app <div>mini-react</div></div>
+const App = <div id='app'>app mini-react</div>
 
 console.log(App)
 
