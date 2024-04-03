@@ -1,8 +1,37 @@
-import React from '../core/React.js'
+import React from "../core/React.js"
 
-const App = <div id='app'>app mini-react</div>
+function Counter() {
+  return (
+    <div>
+      counter{" "}
+      <ChildOfCounter num={123}>
+        grandson of counter <div>granddaughter of counter</div>
+      </ChildOfCounter>
+    </div>
+  )
+}
 
-console.log(App)
+function ChildOfCounter({ children, num }) {
+  return (
+    <div>
+      <div>
+        ChildOfCounter: children: {children} num: {num}
+      </div>
+      {children}
+    </div>
+  )
+}
 
+function AnotherCounter() {
+  return <div>another counter</div>
+}
 
-export default App 
+const App = () => (
+  <div id="app">
+    app mini-react
+    <Counter />
+    <AnotherCounter />
+  </div>
+)
+
+export default App
