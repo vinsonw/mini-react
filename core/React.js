@@ -39,6 +39,7 @@ function render(vdom, container) {
 }
 
 let root = null
+let currentRoot = null
 let nextWorkOfUnit = null
 function workLoop(deadline) {
   let shouldYield = false
@@ -52,7 +53,6 @@ function workLoop(deadline) {
   // append dom at once
   if (!nextWorkOfUnit && root) {
     commitRoot(root)
-    root = null
   }
 
   requestIdleCallback(workLoop)
@@ -60,6 +60,7 @@ function workLoop(deadline) {
 
 function commitRoot() {
   commitWork(root.child)
+  currentRoot = root
   root = null
 }
 
@@ -69,10 +70,16 @@ function commitWork(fiber) {
   while (!fiberParent.dom) {
     fiberParent = fiberParent.parent
   }
-  // no dom for fiber of function component
-  if (fiber.dom) {
-    fiberParent.dom.append(fiber.dom)
+
+  if (fiber.effectTag === "update") {
+    updateProps(fiber.dom, fiber.props, fiber.alternate?.props)
+  } else if (fiber.effectTag === "placement") {
+    // no dom for fiber of function component
+    if (fiber.dom) {
+      fiberParent.dom.append(fiber.dom)
+    }
   }
+
   commitWork(fiber.child)
   commitWork(fiber.sibling)
 }
@@ -83,40 +90,89 @@ function createDom(type) {
     : document.createElement(type)
 }
 
-function updateProps(dom, props) {
-  Object.keys(props).forEach((key) => {
+function updateProps(dom, nextProps, prevProps) {
+  Object.keys(nextProps).forEach((key) => {
     console.log("key", key)
     if (key !== "children") {
       if (key.startsWith("on")) {
         const eventType = key.slice(2).toLowerCase()
-        dom.addEventListener(eventType, props[key])
+        dom.addEventListener(eventType, nextProps[key])
       } else {
-        dom[key] = props[key]
+        dom[key] = nextProps[key]
+      }
+    }
+  })
+
+  // to each prop, we should consider:
+  // 1.  exists in prevProps, not in nextProps
+  Object.keys(prevProps).forEach((key) => {
+    // console.log("key", key)
+    if (key !== "children") {
+      if (!(key in nextProps)) {
+        dom.removeAttribute(key)
+      }
+    }
+  })
+
+  // 2. exists in nextProps, may exist or may not exist in prevProps
+  Object.keys(nextProps).forEach((key) => {
+    // console.log("key", key)
+    if (key !== "children") {
+      if (key.startsWith("on")) {
+        const eventType = key.slice(2).toLowerCase()
+        dom.addEventListener(eventType, nextProps[key])
+      } else {
+        dom[key] = nextProps[key]
       }
     }
   })
 }
 
-function initChildren(work, children) {
-  // const children = work.props.children
+function initChildren(fiber, children) {
+  // note: remember we are dealing with the children of the fiber and not the fiber itself
   let prevChild = null
+  let oldFiber = fiber.alternate?.child
 
   // flat the children
   let newChildren = []
   children.forEach((child) => (newChildren = newChildren.concat(child)))
 
   newChildren.forEach((child, index) => {
-    const newFiler = {
-      type: child.type,
-      props: child.props,
-      child: null,
-      sibling: null,
-      parent: work,
-      dom: null,
+    // note: the child here is vdom, not fiber, new fiber is created based on this vdom
+    const isSameType = oldFiber && oldFiber.type === child.type
+
+    let newFiler
+    if (isSameType) {
+      // update
+      newFiler = {
+        type: child.type,
+        props: child.props,
+        child: null,
+        sibling: null,
+        parent: fiber,
+        dom: oldFiber.dom,
+        effectTag: "update",
+        alternate: oldFiber,
+      }
+    } else {
+      // add
+      newFiler = {
+        type: child.type,
+        props: child.props,
+        child: null,
+        sibling: null,
+        parent: fiber,
+        dom: null,
+        effectTag: "placement",
+      }
+    }
+
+    if (oldFiber) {
+      oldFiber = oldFiber.sibling
     }
 
     if (index === 0) {
-      work.child = newFiler
+      fiber.child = newFiler
     } else {
       prevChild.sibling = newFiler
     }
@@ -134,11 +190,13 @@ function updateHostComponent(fiber) {
     // 1. 创建dom
     const dom = createDom(fiber.type)
     fiber.dom = dom
+
     // moved to commitRoot()
     // fiber.parent.dom.append(dom)
-    // 2. 处理props
-    updateProps(dom, fiber.props)
   }
+
+  // 2. 处理props
+  updateProps(fiber.dom, fiber.props, {})
 
   const children = fiber.props?.children
   // console.log("[children", children, fiber.type)
@@ -146,6 +204,7 @@ function updateHostComponent(fiber) {
 }
 
 function performWorkOfUnit(fiber) {
+  // debugger
   const isFunctionComponent = typeof fiber.type === "function"
 
   // 3. 转换链表，设置好指针
@@ -171,9 +230,20 @@ function performWorkOfUnit(fiber) {
 
 requestIdleCallback(workLoop)
 
+function update(vdom, container) {
+  // debugger
+  // console.log("vdom", vdom)
+  nextWorkOfUnit = {
+    dom: currentRoot.dom,
+    props: currentRoot.props,
+    alternate: currentRoot,
+  }
+}
+
 const React = {
   render,
   createElement,
+  update,
 }
 
 export default React

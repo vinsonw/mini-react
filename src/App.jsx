@@ -1,23 +1,29 @@
 import React from "../core/React.js"
 
+let num = 123
+let props = {
+  style: "color: red",
+}
 function Counter() {
+  const handleClick = () => {
+    console.log("counter is clicked!")
+    num++
+    props = { style: `color: ${num % 2 === 0 ? "blue" : "red"}` }
+    React.update()
+  }
+
   return (
-    <div onClick={() => console.log("counter is clicked!")}>
-      counter{" "}
-      <ChildOfCounter num={123}>
-        grandson of counter <div>granddaughter of counter</div>
-      </ChildOfCounter>
+    <div {...props}>
+      <button onClick={handleClick}>inc</button>
+      counter {num}
     </div>
   )
 }
 
-function ChildOfCounter({ children, num }) {
+function ChildOfCounter({ num }) {
   return (
     <div>
-      <div>
-        ChildOfCounter: children: {children} num: {num}
-      </div>
-      {children}
+      <div>ChildOfCounter: num: {num}</div>
     </div>
   )
 }
@@ -30,7 +36,7 @@ const App = () => (
   <div id="app">
     app mini-react
     <Counter />
-    <AnotherCounter />
+    {/* <AnotherCounter /> */}
   </div>
 )
 
