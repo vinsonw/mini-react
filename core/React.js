@@ -124,11 +124,8 @@ function reconcileChildren(fiber, children) {
   let prevChild = null
   let oldFiber = fiber.alternate?.child
 
-  // flat the children
-  let newChildren = []
-  children.forEach((child) => (newChildren = newChildren.concat(child)))
-
-  newChildren.forEach((child, index) => {
+  // 3. 转换链表，设置好指针
+  children.forEach((child, index) => {
     const isSameType = oldFiber && oldFiber.type === child.type
 
     let newFiler
@@ -181,12 +178,12 @@ function updateHostComponent(fiber) {
     const dom = createDom(fiber.type)
     fiber.dom = dom
 
+    // 2. 处理props
+    updateProps(fiber.dom, fiber.props, {})
+
     // moved to commitRoot()
     // fiber.parent.dom.append(dom)
   }
-
-  // 2. 处理props
-  updateProps(fiber.dom, fiber.props, {})
 
   const children = fiber.props?.children
   // console.log("[children", children, fiber.type)
@@ -194,9 +191,10 @@ function updateHostComponent(fiber) {
 }
 
 function performWorkOfUnit(fiber) {
-  // debugger
   const isFunctionComponent = typeof fiber.type === "function"
 
+  // 1. 创建dom
+  // 2. 处理props
   // 3. 转换链表，设置好指针
   if (isFunctionComponent) {
     updateFunctionComponent(fiber)
