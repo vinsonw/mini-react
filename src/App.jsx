@@ -2,7 +2,7 @@ import React from "../core/React.js"
 
 function Counter() {
   return (
-    <div>
+    <div onClick={() => console.log("counter is clicked!")}>
       counter{" "}
       <ChildOfCounter num={123}>
         grandson of counter <div>granddaughter of counter</div>
