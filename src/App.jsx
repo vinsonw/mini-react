@@ -1,22 +1,18 @@
 import React from "../core/React.js"
 
-let num = 123
-let props = {
-  style: "color: red",
-}
+let showBar = false
+const Bar = () => <div>bar</div>
+const Foo = () => <p>foo</p>
 function Counter() {
-  const handleClick = () => {
-    console.log("counter is clicked!")
-    num++
-    // props = { style: `color: ${num % 2 === 0 ? "blue" : "red"}` }
-    props = {}
+  const handleShowBar = () => {
+    showBar = !showBar
     React.update()
   }
 
   return (
-    <div {...props}>
-      <button onClick={handleClick}>inc</button>
-      counter {num}
+    <div>
+      <button onClick={handleShowBar}>toggle</button>
+      <div>{showBar ? <Bar /> : <Foo />}</div>
     </div>
   )
 }

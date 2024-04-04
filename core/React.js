@@ -41,6 +41,7 @@ function render(vdom, container) {
 let wipRoot = null // work-in-progress root
 let currentRoot = null
 let nextWorkOfUnit = null
+let deletions = []
 function workLoop(deadline) {
   let shouldYield = false
   while (!shouldYield && nextWorkOfUnit) {
@@ -59,9 +60,23 @@ function workLoop(deadline) {
 }
 
 function commitRoot() {
+  deletions.forEach(commitDeletion)
   commitWork(wipRoot.child)
   currentRoot = wipRoot
   wipRoot = null
+  deletions = []
+}
+
+function commitDeletion(fiber) {
+  if (fiber.dom) {
+    let fiberParent = fiber.parent
+    while (!fiberParent.dom) {
+      fiberParent = fiberParent.parent
+    }
+    fiberParent.dom.removeChild(fiber.dom)
+  } else {
+    commitDeletion(fiber.child)
+  }
 }
 
 function commitWork(fiber) {
@@ -128,10 +143,10 @@ function reconcileChildren(fiber, children) {
   children.forEach((child, index) => {
     const isSameType = oldFiber && oldFiber.type === child.type
 
-    let newFiler
+    let newFiber
     if (isSameType) {
       // update
-      newFiler = {
+      newFiber = {
         type: child.type,
         props: child.props,
         child: null,
@@ -142,8 +157,8 @@ function reconcileChildren(fiber, children) {
         alternate: oldFiber,
       }
     } else {
-      // add
-      newFiler = {
+      // old fiber is not there or new fiber is not the same type as old fiber
+      newFiber = {
         type: child.type,
         props: child.props,
         child: null,
@@ -152,6 +167,10 @@ function reconcileChildren(fiber, children) {
         dom: null,
         effectTag: "placement",
       }
+      if (oldFiber) {
+        // exclude no oldFiber case
+        deletions.push(oldFiber)
+      }
     }
 
     if (oldFiber) {
@@ -159,11 +178,11 @@ function reconcileChildren(fiber, children) {
     }
 
     if (index === 0) {
-      fiber.child = newFiler
+      fiber.child = newFiber
     } else {
-      prevChild.sibling = newFiler
+      prevChild.sibling = newFiber
     }
-    prevChild = newFiler
+    prevChild = newFiber
   })
 }
 
