@@ -8,7 +8,8 @@ function Counter() {
   const handleClick = () => {
     console.log("counter is clicked!")
     num++
-    props = { style: `color: ${num % 2 === 0 ? "blue" : "red"}` }
+    // props = { style: `color: ${num % 2 === 0 ? "blue" : "red"}` }
+    props = {}
     React.update()
   }
 

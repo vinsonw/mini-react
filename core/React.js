@@ -27,7 +27,7 @@ function createTextNode(text) {
 
 function render(vdom, container) {
   // console.log("vdom", vdom)
-  nextWorkOfUnit = {
+  wipRoot = {
     dom: container,
     props: {
       children: [vdom],
@@ -35,10 +35,10 @@ function render(vdom, container) {
   }
 
   // save initial work
-  root = nextWorkOfUnit
+  nextWorkOfUnit = wipRoot
 }
 
-let root = null
+let wipRoot = null // work-in-progress root
 let currentRoot = null
 let nextWorkOfUnit = null
 function workLoop(deadline) {
@@ -51,17 +51,17 @@ function workLoop(deadline) {
   }
 
   // append dom at once
-  if (!nextWorkOfUnit && root) {
-    commitRoot(root)
+  if (!nextWorkOfUnit && wipRoot) {
+    commitRoot(wipRoot)
   }
 
   requestIdleCallback(workLoop)
 }
 
 function commitRoot() {
-  commitWork(root.child)
-  currentRoot = root
-  root = null
+  commitWork(wipRoot.child)
+  currentRoot = wipRoot
+  wipRoot = null
 }
 
 function commitWork(fiber) {
@@ -91,20 +91,8 @@ function createDom(type) {
 }
 
 function updateProps(dom, nextProps, prevProps) {
-  Object.keys(nextProps).forEach((key) => {
-    console.log("key", key)
-    if (key !== "children") {
-      if (key.startsWith("on")) {
-        const eventType = key.slice(2).toLowerCase()
-        dom.addEventListener(eventType, nextProps[key])
-      } else {
-        dom[key] = nextProps[key]
-      }
-    }
-  })
-
-  // to each prop, we should consider:
-  // 1.  exists in prevProps, not in nextProps
+  // for each prop, we should consider:
+  // 1.  it exists in prevProps, not in nextProps
   Object.keys(prevProps).forEach((key) => {
     // console.log("key", key)
     if (key !== "children") {
@@ -114,12 +102,14 @@ function updateProps(dom, nextProps, prevProps) {
     }
   })
 
-  // 2. exists in nextProps, may exist or may not exist in prevProps
+  // 2. it exists in nextProps, may exist or may not exist in prevProps
   Object.keys(nextProps).forEach((key) => {
     // console.log("key", key)
     if (key !== "children") {
       if (key.startsWith("on")) {
         const eventType = key.slice(2).toLowerCase()
+        // when update, first remove previous listener then bind
+        dom.removeEventListener(eventType, prevProps[key])
         dom.addEventListener(eventType, nextProps[key])
       } else {
         dom[key] = nextProps[key]
@@ -128,8 +118,9 @@ function updateProps(dom, nextProps, prevProps) {
   })
 }
 
-function initChildren(fiber, children) {
+function reconcileChildren(fiber, children) {
   // note: remember we are dealing with the children of the fiber and not the fiber itself
+  // note: the child in `children` here is vdom, not fiber, new fiber is created based on this vdom
   let prevChild = null
   let oldFiber = fiber.alternate?.child
 
@@ -138,7 +129,6 @@ function initChildren(fiber, children) {
   children.forEach((child) => (newChildren = newChildren.concat(child)))
 
   newChildren.forEach((child, index) => {
-    // note: the child here is vdom, not fiber, new fiber is created based on this vdom
     const isSameType = oldFiber && oldFiber.type === child.type
 
     let newFiler
@@ -182,7 +172,7 @@ function initChildren(fiber, children) {
 
 function updateFunctionComponent(fiber) {
   const children = [fiber.type(fiber.props)]
-  initChildren(fiber, children)
+  reconcileChildren(fiber, children)
 }
 
 function updateHostComponent(fiber) {
@@ -200,7 +190,7 @@ function updateHostComponent(fiber) {
 
   const children = fiber.props?.children
   // console.log("[children", children, fiber.type)
-  initChildren(fiber, children)
+  reconcileChildren(fiber, children)
 }
 
 function performWorkOfUnit(fiber) {
@@ -233,11 +223,13 @@ requestIdleCallback(workLoop)
 function update(vdom, container) {
   // debugger
   // console.log("vdom", vdom)
-  nextWorkOfUnit = {
+  wipRoot = {
     dom: currentRoot.dom,
     props: currentRoot.props,
     alternate: currentRoot,
   }
+
+  nextWorkOfUnit = wipRoot
 }
 
 const React = {
