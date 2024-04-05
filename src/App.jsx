@@ -9,7 +9,7 @@ const App = () => {
   const [bar, setBar] = React.useState(10)
   const handleClick = () => {
     setCount((count) => count + 1)
-    setBar((count) => count + 1)
+    setBar("bar")
   }
   return (
     <div id="app">
