@@ -158,15 +158,21 @@ function reconcileChildren(fiber, children) {
       }
     } else {
       // old fiber is not there or new fiber is not the same type as old fiber
-      newFiber = {
-        type: child.type,
-        props: child.props,
-        child: null,
-        sibling: null,
-        parent: fiber,
-        dom: null,
-        effectTag: "placement",
+
+      // child could be falsy values like false/null etc
+      //to signal that it should not be rendered, thus not creating fiber for these children
+      if (child) {
+        newFiber = {
+          type: child.type,
+          props: child.props,
+          child: null,
+          sibling: null,
+          parent: fiber,
+          dom: null,
+          effectTag: "placement",
+        }
       }
+
       if (oldFiber) {
         // exclude no oldFiber case
         deletions.push(oldFiber)
@@ -184,6 +190,13 @@ function reconcileChildren(fiber, children) {
     }
     prevChild = newFiber
   })
+
+  // if oldFiber still has trusy value here, it means the oldFiber is an extra old sibling and there is no counterpart newFiber to it
+  // so collect it for deletion
+  while (oldFiber) {
+    deletions.push(oldFiber)
+    oldFiber = oldFiber.sibling
+  }
 }
 
 function updateFunctionComponent(fiber) {

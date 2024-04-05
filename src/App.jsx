@@ -1,8 +1,15 @@
 import React from "../core/React.js"
 
 let showBar = false
-const Bar = () => <div>bar</div>
-const Foo = () => <p>foo</p>
+const Bar = <div id={"bar"}>bar</div>
+const Foo = (
+  <div id={"foo"}>
+    foo
+    <div>foo child 1</div>
+    <div>foo child 2</div>
+  </div>
+)
+
 function Counter() {
   const handleShowBar = () => {
     showBar = !showBar
@@ -12,28 +19,16 @@ function Counter() {
   return (
     <div>
       <button onClick={handleShowBar}>toggle</button>
-      <div>{showBar ? <Bar /> : <Foo />}</div>
+      <div>{showBar && Bar}</div>
+      <div>counter bottom</div>
     </div>
   )
-}
-
-function ChildOfCounter({ num }) {
-  return (
-    <div>
-      <div>ChildOfCounter: num: {num}</div>
-    </div>
-  )
-}
-
-function AnotherCounter() {
-  return <div>another counter</div>
 }
 
 const App = () => (
   <div id="app">
     app mini-react
     <Counter />
-    {/* <AnotherCounter /> */}
   </div>
 )
 
