@@ -173,6 +173,10 @@ function reconcileChildren(fiber, children) {
         }
       }
 
+      // if (!child) {
+      //   debugger
+      // }
+
       if (oldFiber) {
         // exclude no oldFiber case
         deletions.push(oldFiber)
@@ -186,9 +190,18 @@ function reconcileChildren(fiber, children) {
     if (index === 0) {
       fiber.child = newFiber
     } else {
-      prevChild.sibling = newFiber
+      // when first child is falsy, 2nd child has no prevChild...
+      if (prevChild) {
+        prevChild.sibling = newFiber
+      } else {
+        // ...so 2nd child should be the first child
+        fiber.child = newFiber
+      }
     }
-    prevChild = newFiber
+    if (newFiber) {
+      // we are gonna use prevChild later, it should not receive undefine
+      prevChild = newFiber
+    }
   })
 
   // if oldFiber still has trusy value here, it means the oldFiber is an extra old sibling and there is no counterpart newFiber to it

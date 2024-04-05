@@ -19,7 +19,7 @@ function Counter() {
   return (
     <div>
       <button onClick={handleShowBar}>toggle</button>
-      <div>{showBar && Bar}</div>
+      {showBar && Bar}
       <div>counter bottom</div>
     </div>
   )
