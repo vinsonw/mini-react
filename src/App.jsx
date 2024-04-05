@@ -1,59 +1,22 @@
 import React from "../core/React.js"
 
 /**
- * 18 优化更新: 减少不必要的计算
- * 开始: 当前需要更新的组件fiber 结束: 当需要处理当前组件兄弟fiber节点的时候
+ * 19: impl useState()
  */
 
-let countFoo = 1
-const Foo = () => {
-  console.log("Foo runs")
-
-  let update = React.update()
-  const handleClick = () => {
-    countFoo++
-    update()
-  }
-  return (
-    <div>
-      <h2>Foo</h2>
-      {countFoo}
-      <button onClick={handleClick}>inc bar count</button>
-    </div>
-  )
-}
-
-let countBar = 1
-const Bar = () => {
-  console.log("Bar runs")
-  const update = React.update()
-  const handleClick = () => {
-    countBar++
-    update()
-  }
-  return (
-    <div>
-      <h2>bar</h2>
-      {countBar}
-      <button onClick={handleClick}>inc bar count</button>
-    </div>
-  )
-}
-
-let appCount = 1
 const App = () => {
-  const update = React.update()
+  const [count, setCount] = React.useState(1)
+  const [bar, setBar] = React.useState(10)
   const handleClick = () => {
-    appCount++
-    update()
+    setCount((count) => count + 1)
+    setBar((count) => count + 1)
   }
   return (
     <div id="app">
       <button onClick={handleClick}>app inc</button>
-      <h2>app count {appCount}</h2>
       app mini-react
-      <Foo />
-      <Bar />
+      <p>count {count}</p>
+      <p>bar {bar}</p>
     </div>
   )
 }

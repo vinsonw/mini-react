@@ -219,6 +219,8 @@ function reconcileChildren(fiber, children) {
 }
 
 function updateFunctionComponent(fiber) {
+  stateHooks = []
+  stateHookIndex = 0
   wipFiber = fiber
   const children = [fiber.type(fiber.props)]
   reconcileChildren(fiber, children)
@@ -292,10 +294,42 @@ function update(vdom, container) {
   }
 }
 
+let stateHooks
+let stateHookIndex
+// note: useState is called inside updateFunctionComponent and after stateHooks and stateHookIndex are reset to default value
+function useState(initial) {
+  // debugger
+  let currentFiber = wipFiber
+  const oldHook = currentFiber.alternate?.stateHooks[stateHookIndex]
+  const stateHook = {
+    state: oldHook ? oldHook.state : initial,
+  }
+
+  stateHookIndex++
+  stateHooks.push(stateHook)
+
+  // save stateHooks for re-render of the function component
+  currentFiber.stateHooks = stateHooks
+
+  function setState(action) {
+    // debugger
+    stateHook.state = action(stateHook.state)
+    // create new fiber
+    wipRoot = {
+      ...currentFiber,
+      alternate: currentFiber,
+    }
+
+    nextWorkOfUnit = wipRoot
+  }
+
+  return [stateHook.state, setState]
+}
+
 const React = {
   render,
   createElement,
-  update,
+  useState,
 }
 
 export default React
