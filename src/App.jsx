@@ -7,6 +7,7 @@ import React from "../core/React.js"
 const App = () => {
   const [count, setCount] = React.useState(1)
   const [bar, setBar] = React.useState(10)
+  console.log("App re-runs")
   const handleClick = () => {
     setCount((count) => count + 1)
     setBar("bar")

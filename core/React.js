@@ -322,6 +322,14 @@ function useState(initial) {
 
   function setState(action) {
     // stateHook.state = action(stateHook.state)
+
+    // eagerly check whether the state will change after setState() call, if not,
+    // don't bother doing update
+    const eagerState =
+      typeof action === "function" ? action(stateHook.state) : action
+    if (eagerState === stateHook.state) return
+
+    // queue the action to run in next re-run of function component
     stateHook.queue.push(typeof action === "function" ? action : () => action)
     // create new fiber
     wipRoot = {
