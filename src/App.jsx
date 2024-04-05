@@ -1,26 +1,33 @@
 import React from "../core/React.js"
 
-let showBar = false
-const Bar = <div id={"bar"}>bar</div>
-const Foo = (
-  <div id={"foo"}>
-    foo
-    <div>foo child 1</div>
-    <div>foo child 2</div>
-  </div>
-)
-
-function Counter() {
-  const handleShowBar = () => {
-    showBar = !showBar
+let countFoo = 1
+const Foo = () => {
+  console.log("Foo runs")
+  const handleClick = () => {
+    countFoo++
     React.update()
   }
-
   return (
     <div>
-      <button onClick={handleShowBar}>toggle</button>
-      {showBar && Bar}
-      <div>counter bottom</div>
+      <h2>Foo</h2>
+      {countFoo}
+      <button onClick={handleClick}>inc bar count</button>
+    </div>
+  )
+}
+
+let countBar = 1
+const Bar = () => {
+  console.log("Bar runs")
+  const handleClick = () => {
+    countBar++
+    React.update()
+  }
+  return (
+    <div>
+      <h2>bar</h2>
+      {countBar}
+      <button onClick={handleClick}>inc bar count</button>
     </div>
   )
 }
@@ -28,7 +35,8 @@ function Counter() {
 const App = () => (
   <div id="app">
     app mini-react
-    <Counter />
+    <Foo />
+    <Bar />
   </div>
 )
 
