@@ -60,6 +60,16 @@ function workLoop(deadline) {
   // append dom at once
   if (!nextWorkOfUnit && wipRoot) {
     commitRoot(wipRoot)
+
+    // note:
+    // inside commitRoot() > commitEffectHooks(), setState() may be called again,
+    // in that case nextWorkOfUnit may be set to a new work of unit again,
+    // when that happens, the below `if` would be hit,
+    // inside which we should restore the wipRoot value set in setState(), which is saved in currentRoot in commitWork() right
+    // before wipRoot is set to null, so newly generated work of unit in setState() could be committed when it is finished
+    if (nextWorkOfUnit) {
+      wipRoot = currentRoot
+    }
   }
 
   requestIdleCallback(workLoop)
@@ -133,7 +143,7 @@ function commitWork(fiber) {
     fiberParent = fiberParent.parent
   }
 
-  if (fiber.effectTag === "update") {
+  if (fiber.effectTag === "update" && fiber.dom) {
     updateProps(fiber.dom, fiber.props, fiber.alternate?.props)
   } else if (fiber.effectTag === "placement") {
     // no dom for fiber of function component
