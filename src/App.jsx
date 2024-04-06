@@ -12,6 +12,15 @@ const App = () => {
     setCount((count) => count + 1)
     setBar("bar")
   }
+
+  React.useEffect(() => {
+    console.log("init")
+  }, [])
+
+  React.useEffect(() => {
+    console.log("update")
+  }, [count])
+
   return (
     <div id="app">
       <button onClick={handleClick}>app inc</button>
