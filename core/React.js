@@ -79,7 +79,7 @@ function commitEffectHooks() {
     if (!fiber) return
     if (!fiber.alternate) {
       // init
-      fiber.effectHooks?.forEach((hook) => hook.callback())
+      fiber.effectHooks?.forEach((hook) => (hook.cleanup = hook.callback()))
     } else {
       // update
       fiber.effectHooks?.forEach((newHook, hookIndex) => {
@@ -87,7 +87,7 @@ function commitEffectHooks() {
         const newHookNeedsUpdate = newHook.deps.some((newDep, depIndex) => {
           return newDep !== oldEffectHook.deps[depIndex]
         })
-        newHookNeedsUpdate && newHook.callback()
+        newHookNeedsUpdate && (newHook.cleanup = newHook.callback())
       })
     }
 
@@ -96,6 +96,21 @@ function commitEffectHooks() {
     run(fiber.sibling)
   }
 
+  function runCleanup(fiber) {
+    if (!fiber) return
+    // note: it is fiber.alternate
+    fiber.alternate?.effectHooks?.forEach(
+      (hook) => hook.deps.length > 0 && hook.cleanup?.()
+    )
+
+    runCleanup(fiber.child)
+    runCleanup(fiber.sibling)
+  }
+
+  // running order matters here:
+  // run cleanup on oldFiber(fiber.alternate) first,
+  // then run effect callback on newFiber
+  runCleanup(wipRoot)
   run(wipRoot)
 }
 
@@ -375,6 +390,7 @@ function useEffect(callback, deps) {
   const effectHook = {
     callback,
     deps,
+    cleanup: undefined,
   }
 
   effectHooks.push(effectHook)
